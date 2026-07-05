@@ -1,6 +1,6 @@
 # Fullstack DevOps Training App
 
-A minimal fullstack app for DevOps practice: **React + Vite + TypeScript** frontend, **Node.js + Express + TypeScript** API, and **Neon Postgres**.
+A minimal fullstack app for DevOps practice: **React + Vite + TypeScript** frontend, **Node.js + Express + TypeScript** API, **Neon Postgres**, **Docker**, **GitHub Actions CI/CD**, and **Docker Hub** publishing.
 
 ## Stack
 
@@ -9,6 +9,8 @@ A minimal fullstack app for DevOps practice: **React + Vite + TypeScript** front
 | Frontend | React 19, Vite 8, TypeScript |
 | Backend  | Node.js, Express 5, TypeScript |
 | Database | Neon Postgres (`@neondatabase/serverless`) — hosted, not containerized |
+| Dev ops  | Docker Compose (dev + prod) |
+| CI/CD    | GitHub Actions → Docker Hub |
 
 ## API endpoints
 
@@ -17,6 +19,23 @@ A minimal fullstack app for DevOps practice: **React + Vite + TypeScript** front
 | GET    | `/api/health`  | Health check + DB ping   |
 | GET    | `/api/tasks`   | List tasks               |
 | POST   | `/api/tasks`   | Create task `{ "title": "..." }` |
+
+## Full pipeline overview
+
+```
+DEV  →  GIT PUSH  →  CI  →  CD  →  DEPLOY
+ │         │          │      │        │
+local    GitHub    build/   push    pull &
+docker   Actions    lint    Docker  run prod
+compose             test    Hub     on server
+```
+
+| Phase | Command / trigger | Docs |
+|-------|-------------------|------|
+| **Dev** | `docker compose up --build` | [DOCKERIZATION-WALKTHROUGH](docs/DOCKERIZATION-WALKTHROUGH.md) |
+| **CI** | Push or PR to `main` | [CI-CD](docs/CI-CD.md) · [TESTING](docs/TESTING.md) |
+| **CD** | Auto after CI passes on `main` | [CI-CD](docs/CI-CD.md) |
+| **Deploy** | Pull images on a server | [DEPLOYMENT](docs/DEPLOYMENT.md) |
 
 ---
 
@@ -50,39 +69,57 @@ npm run dev
 
 App runs at `http://localhost:5173`. Vite proxies `/api` requests to the backend during development.
 
+### 4. Run tests
+
+```bash
+cd back && npm test
+cd front && npm test
+```
+
+See **[docs/TESTING.md](docs/TESTING.md)** for details.
+
 ---
 
 ## Project structure
 
 ```
-fullstack-app-docker/              ← repo root (where you run Compose)
-├── docker-compose.yml
-├── .env                           ← shared secrets (gitignored)
+fullstack-app-docker/
+├── docker-compose.yml             ← dev
+├── docker-compose.prod.yml        ← production
+├── .env                           ← dev secrets (gitignored)
 ├── .env.example
-├── .gitignore
-├── README.md
+├── .env.prod.example              ← prod secrets template
+├── .github/workflows/
+│   ├── ci.yml                     ← build/lint on push & PR
+│   └── cd.yml                     ← push images to Docker Hub
 ├── docs/
-│   ├── DOCKERIZATION-WALKTHROUGH.md   ← step-by-step Docker guide (reusable)
-│   ├── POSTGRES-IN-DOCKER.md          ← local Postgres container vs Neon
-│   └── DOCKER-REFERENCE.md            ← volumes, up vs --build, disk space
-│
-├── back/                          ← Express API
-│   ├── Dockerfile
-│   ├── .dockerignore
+│   ├── DOCKERIZATION-WALKTHROUGH.md
+│   ├── POSTGRES-IN-DOCKER.md
+│   ├── DOCKER-REFERENCE.md
+│   ├── CI-CD.md
+│   ├── DEPLOYMENT.md
+│   └── TESTING.md
+├── back/
+│   ├── Dockerfile                 ← dev
+│   ├── Dockerfile.prod            ← production
 │   └── src/
-│
-└── front/                         ← React Vite app
-    ├── Dockerfile
-    ├── .dockerignore
-    ├── vite.config.ts
+└── front/
+    ├── Dockerfile                 ← dev
+    ├── Dockerfile.prod            ← vite build + nginx
+    ├── nginx.conf
     └── src/
 ```
 
-**Docker deep dive:** For the full explained walkthrough (every step, every "why"), see **[docs/DOCKERIZATION-WALKTHROUGH.md](docs/DOCKERIZATION-WALKTHROUGH.md)**.
+**Documentation:**
 
-**Postgres in Docker:** To run a local Postgres container instead of Neon, see **[docs/POSTGRES-IN-DOCKER.md](docs/POSTGRES-IN-DOCKER.md)**.
-
-**Docker reference:** Volumes, `up` vs `--build`, disk space, healthchecks — **[docs/DOCKER-REFERENCE.md](docs/DOCKER-REFERENCE.md)**.
+| Doc | Topic |
+|-----|-------|
+| [DOCKERIZATION-WALKTHROUGH](docs/DOCKERIZATION-WALKTHROUGH.md) | Dev Docker, step-by-step |
+| [POSTGRES-IN-DOCKER](docs/POSTGRES-IN-DOCKER.md) | Local Postgres container vs Neon |
+| [DOCKER-REFERENCE](docs/DOCKER-REFERENCE.md) | Volumes, `up` vs `--build`, disk space |
+| [CI-CD](docs/CI-CD.md) | GitHub Actions, prod Dockerfiles, Docker Hub |
+| [DEPLOYMENT](docs/DEPLOYMENT.md) | Run production images on a server |
+| [TESTING](docs/TESTING.md) | Vitest, Supertest, Testing Library |
 
 **Placement rule:** `docker-compose.yml` and the root `.env` always live at the repo root — one level above `back/` and `front/`. Each service keeps its own `Dockerfile` inside its folder. Compose points at them with `build: ./back` and `build: ./front`.
 
@@ -353,23 +390,60 @@ CMD ["node", "dist/index.js"]
 
 ---
 
-## Quick reference — files to create
+## CI/CD quick start
 
-When you're ready to dockerize, add these files:
+### 1. GitHub secrets (for Docker Hub push)
+
+Repo → Settings → Secrets → Actions:
+
+| Secret | Value |
+|--------|-------|
+| `DOCKERHUB_USERNAME` | Your Docker Hub username |
+| `DOCKERHUB_TOKEN` | Docker Hub access token |
+
+### 2. GitHub variable (for frontend prod build)
+
+Repo → Settings → Variables → Actions:
+
+| Variable | Value |
+|----------|-------|
+| `VITE_API_URL` | Production API URL (e.g. `http://YOUR_SERVER_IP:3000`) |
+
+### 3. Push to `main`
+
+CI runs on every push/PR. CD pushes images after CI passes:
 
 ```
-fullstack-app-docker/
-├── docker-compose.yml       ← Step 5
-├── .env                     ← Step 4 (gitignored)
-├── back/
-│   ├── Dockerfile           ← Step 1
-│   └── .dockerignore        ← Step 3
-└── front/
-    ├── Dockerfile           ← Step 2
-    └── .dockerignore        ← Step 3
+youruser/fullstack-app-api:<git-sha>
+youruser/fullstack-app-client:<git-sha>
 ```
 
-Plus the one-line `host: true` change in `front/vite.config.ts` (Step 0).
+Full details → **[docs/CI-CD.md](docs/CI-CD.md)**
+
+---
+
+## Production quick start
+
+### Test prod locally
+
+```bash
+cp .env.prod.example .env.prod
+# Edit .env.prod
+
+docker compose -f docker-compose.prod.yml --env-file .env.prod up --build
+```
+
+Open **http://localhost:8080** (nginx) — API at **http://localhost:3000**.
+
+### Deploy to a server
+
+```bash
+# On server — after CD has pushed images
+docker compose -f docker-compose.prod.yml --env-file .env.prod pull
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+```
+
+Full details → **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**
 
 ---
 
@@ -383,3 +457,7 @@ Plus the one-line `host: true` change in `front/vite.config.ts` (Step 0).
 | `npm` errors after mount | Host `node_modules` overwrote container's | Ensure `/app/node_modules` anonymous volume is present |
 | Changes to `package.json` ignored | Cached `node_modules` volume | `docker compose down` then `docker compose up --build` |
 | API works locally but not in Docker | Neon IP allowlist / network | Neon is cloud-hosted — usually works from anywhere; verify connection string and `sslmode=require` |
+| CI fails on PR | Build or lint error | Check Actions logs for `back` or `front` job |
+| CD doesn't push | Missing Docker Hub secrets | Add `DOCKERHUB_USERNAME` + `DOCKERHUB_TOKEN` |
+| Prod frontend can't reach API | Wrong `VITE_API_URL` at build time | Set GitHub variable before CD; rebuild client image |
+| CORS errors in prod | `CORS_ORIGIN` mismatch | Must exactly match prod frontend URL |

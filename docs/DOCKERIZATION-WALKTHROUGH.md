@@ -707,7 +707,9 @@ fullstack-app-docker/
 ├── docs/
 │   ├── DOCKERIZATION-WALKTHROUGH.md   ← this file
 │   ├── POSTGRES-IN-DOCKER.md
-│   └── DOCKER-REFERENCE.md            ← volumes, up vs --build, disk space
+│   ├── DOCKER-REFERENCE.md
+│   ├── CI-CD.md
+│   └── DEPLOYMENT.md
 ├── back/
 │   ├── Dockerfile
 │   ├── .dockerignore

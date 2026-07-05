@@ -5,6 +5,8 @@ Supplementary explanations for things that come up after the main walkthrough: v
 **Related docs:**
 - [DOCKERIZATION-WALKTHROUGH.md](./DOCKERIZATION-WALKTHROUGH.md) — main step-by-step guide (Neon setup)
 - [POSTGRES-IN-DOCKER.md](./POSTGRES-IN-DOCKER.md) — adding a local Postgres container
+- [CI-CD.md](./CI-CD.md) — GitHub Actions pipelines
+- [DEPLOYMENT.md](./DEPLOYMENT.md) — production deployment
 
 ---
 

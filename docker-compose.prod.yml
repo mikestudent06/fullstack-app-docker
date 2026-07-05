@@ -1,0 +1,40 @@
+# Production compose — no bind mounts, no dev servers.
+# Use pre-built images from Docker Hub (after CD) or build locally for testing.
+#
+# Local prod test:
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up --build
+#
+# Pull published images (on a server):
+#   Set DOCKERHUB_USERNAME + IMAGE_TAG in .env.prod, then:
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod pull
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+
+services:
+  api:
+    image: ${DOCKERHUB_USERNAME}/fullstack-app-api:${IMAGE_TAG:-latest}
+    build:
+      context: ./back
+      dockerfile: Dockerfile.prod
+    container_name: prod_api
+    ports:
+      - "${API_PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - PORT=3000
+      - CORS_ORIGIN=${CORS_ORIGIN}
+    restart: unless-stopped
+
+  client:
+    image: ${DOCKERHUB_USERNAME}/fullstack-app-client:${IMAGE_TAG:-latest}
+    build:
+      context: ./front
+      dockerfile: Dockerfile.prod
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+    container_name: prod_client
+    ports:
+      - "${CLIENT_PORT:-8080}:80"
+    depends_on:
+      - api
+    restart: unless-stopped
