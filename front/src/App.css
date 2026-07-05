@@ -1,0 +1,155 @@
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 4rem;
+}
+
+header {
+  margin-bottom: 2rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6366f1;
+}
+
+h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  line-height: 1.1;
+  color: #0f172a;
+}
+
+.subtitle {
+  margin: 0.75rem 0 0;
+  color: #475569;
+}
+
+.panel {
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.status {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  margin-bottom: 1rem;
+}
+
+.status span {
+  color: #64748b;
+}
+
+.status strong {
+  color: #0f172a;
+}
+
+.error {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.task-form {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.task-form input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  font: inherit;
+}
+
+.task-form button {
+  padding: 0.75rem 1.25rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: #4f46e5;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.task-form button:hover {
+  background: #4338ca;
+}
+
+.muted {
+  color: #64748b;
+}
+
+.task-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.task-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 0;
+  border-top: 1px solid #e2e8f0;
+}
+
+.task-list li:first-child {
+  border-top: 0;
+}
+
+.task-list time {
+  color: #64748b;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+@media (prefers-color-scheme: dark) {
+  h1,
+  .status strong {
+    color: #f8fafc;
+  }
+
+  .subtitle,
+  .status span,
+  .muted,
+  .task-list time {
+    color: #94a3b8;
+  }
+
+  .panel {
+    background: #111827;
+    border-color: #1f2937;
+    box-shadow: none;
+  }
+
+  .status {
+    background: #0f172a;
+  }
+
+  .task-form input {
+    background: #0f172a;
+    border-color: #334155;
+    color: #f8fafc;
+  }
+
+  .task-list li {
+    border-color: #1f2937;
+  }
+}
